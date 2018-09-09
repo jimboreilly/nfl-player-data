@@ -1,0 +1,6 @@
+# Dependency directories
+node_modules/
+
+# F# build artifacts
+src/fsharp/bin/
+src/fsharp/obj/

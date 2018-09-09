@@ -1,0 +1,23 @@
+{
+  "name": "nfl-player-data",
+  "version": "1.0.0",
+  "description": "Manipulating and plotting NFL game data using D3.js",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JamesMReilly/nfl-player-data.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JamesMReilly/nfl-player-data/issues"
+  },
+  "homepage": "https://github.com/JamesMReilly/nfl-player-data#readme",
+  "dependencies": {
+    "d3-dsv": "^1.0.10",
+    "d3-fetch": "^1.1.2"
+  }
+}
