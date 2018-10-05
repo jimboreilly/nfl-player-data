@@ -1,6 +1,10 @@
 var d3Fetch = require('d3-fetch');
 var d3Select = require('d3-selection');
 
+const pointsPerYd = 0.1;
+const pointsPerTd = 6;
+const pointsPerFumble = -2;
+
 const parseLine = (line) => {
   return {
     Name: line['Name'],
@@ -11,7 +15,8 @@ const parseLine = (line) => {
     RushingTd: parseInt(line["Rushing TDs"]),
     Receptions: parseInt(line["Receptions"]),
     ReceivingYards: parseInt(line["Receiving Yards"]),
-    ReceivingTds: parseInt(line["Receiving TDs"])
+    ReceivingTds: parseInt(line["Receiving TDs"]),
+    Fumbles: parseInt(line["Fumbles"])
   };
 }
 
@@ -28,13 +33,18 @@ const selectUniqueSeasons = (gameData) => {
 }
 
 const accumulateStatsForGames = (playerName, season, games) => {
-  let seasonStats = { Name: playerName, Season: season, Attempts: 0, RushingYards: 0, RushingTd: 0 };
+  let seasonStats = { Name: playerName, Season: season, GamesPlayed: 0, Attempts: 0, RushingYards: 0, RushingTd: 0, Fumbles: 0 };
   games.forEach((game) => {
+    seasonStats.GamesPlayed++;
     seasonStats.Attempts += game.Attempts;
     seasonStats.RushingYards += game.RushingYards;
     seasonStats.RushingTd += game.RushingTd;
+    if (!isNaN(game.Fumbles)) seasonStats.Fumbles += game.Fumbles;
   });
 
+  seasonStats.FantasyPoints = (seasonStats.RushingYards * pointsPerYd)
+    + (seasonStats.RushingTd * pointsPerTd)
+    + (seasonStats.Fumbles * pointsPerFumble);
   return seasonStats;
 }
 
@@ -59,7 +69,8 @@ const buildPlayerStatsBySeason = (seasons, regularSeasonData) => {
     let gamesInSeason = regularSeasonData.filter(game => game.Year == season);
     let playersInSeason = selectUniquePlayerNames(gamesInSeason);
     return playersInSeason.map(player => {
-      gamesInSeason.filter(game => game.Name === player).map(statsForPlayer => accumulateStatsForGames(player, season, statsForPlayer));
+      let statsForPlayer = gamesInSeason.filter(game => game.Name == player);
+      return accumulateStatsForGames(player, season, statsForPlayer);
     });
   });
 }
@@ -79,7 +90,7 @@ d3Fetch.csv("data/Game_Logs_Runningback.csv", parseLine).then(data => {
 
   console.log(regularSeasonData);
   console.log(players);
-  console.log(buildSeasonStatsByPlayer(players, regularSeasonData));
+  //console.log(buildSeasonStatsByPlayer(players, regularSeasonData));
 
   console.log(seasons);
   console.log(buildPlayerStatsBySeason(seasons, regularSeasonData));
