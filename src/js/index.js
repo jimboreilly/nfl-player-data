@@ -3,6 +3,7 @@ var d3Select = require('d3-selection');
 var d3Axis = require('d3-axis');
 var d3Scale = require('d3-scale');
 var d3Array = require('d3-array');
+var d3Format = require('d3-format');
 
 var svg = d3Select.select("#stats");
 var maxFantasyPoints = 0;
@@ -94,7 +95,7 @@ const buildPlayerStatsBySeason = (seasons, regularSeasonData) => {
 
 const plotAxis = (svg, xScale, yScale, xAxisLabel, yAxisLabel) => {
   //x-axis, NFL Season
-  var bottomAxis = d3Axis.axisBottom(xScale);
+  var bottomAxis = d3Axis.axisBottom(xScale).tickFormat(d3Format.format("d"));
   svg.append("g")
     .attr("transform", "translate(0," + (height - xPadding) + ")")
     .attr("class", "xaxis")
@@ -160,7 +161,7 @@ d3Fetch.csv("data/Game_Logs_Runningback.csv", parseLine).then(data => {
   console.log(seasonExtent);
 
   let fantasyPointsScale = d3Scale.scaleLinear()
-    .domain([0, maxFantasyPoints + 20])
+    .domain([-10, maxFantasyPoints + 20])
     .range([height - yPadding, yPadding]);
 
   plotPlayersOverEachSeason(svg, seasonDataByPlayer, seasonScale, fantasyPointsScale);
