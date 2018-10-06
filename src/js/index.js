@@ -1,5 +1,18 @@
 var d3Fetch = require('d3-fetch');
 var d3Select = require('d3-selection');
+var d3Axis = require('d3-axis');
+var d3Scale = require('d3-scale');
+var d3Array = require('d3-array');
+
+var svg = d3Select.select("#stats");
+var maxFantasyPoints = 0;
+
+const width = svg.attr("width");
+const height = svg.attr("height");
+
+//paddings for minimized size of graph to fit labels/title
+const xPadding = 80;
+const yPadding = 80;
 
 const pointsPerYd = 0.1;
 const pointsPerTd = 6;
@@ -45,6 +58,8 @@ const accumulateStatsForGames = (playerName, season, games) => {
   seasonStats.FantasyPoints = (seasonStats.RushingYards * pointsPerYd)
     + (seasonStats.RushingTd * pointsPerTd)
     + (seasonStats.Fumbles * pointsPerFumble);
+
+  if (seasonStats.FantasyPoints > maxFantasyPoints) maxFantasyPoints = seasonStats.FantasyPoints;
   return seasonStats;
 }
 
@@ -77,6 +92,32 @@ const buildPlayerStatsBySeason = (seasons, regularSeasonData) => {
   });
 }
 
+const plotAxis = (svg, xScale, yScale, xAxisLabel, yAxisLabel) => {
+  //x-axis, NFL Season
+  var bottomAxis = d3Axis.axisBottom(xScale);
+  svg.append("g")
+    .attr("transform", "translate(0," + (height - xPadding) + ")")
+    .attr("class", "xaxis")
+    .call(bottomAxis);
+
+  //y-axis, fantasy points per rush attempt
+  var leftAxis = d3Axis.axisLeft(yScale);
+  svg.append("g")
+    .attr("class", "yaxis")
+    .attr("transform", "translate(" + yPadding + ", 0)")
+    .call(leftAxis);
+
+  //x-axis label
+  svg.append("text")
+    .attr("transform", "translate(" + (width / 2.3) + "," + (height - (xPadding / 2)) + ")")
+    .text(xAxisLabel);
+
+  //y-axis label, rotated to be vertical text
+  svg.append("text")
+    .attr("transform", "translate(" + yPadding / 3 + "," + (height / 1.7) + ")rotate(270)")
+    .text(yAxisLabel);
+}
+
 d3Fetch.csv("data/Game_Logs_Runningback.csv", parseLine).then(data => {
   console.log(data);
 
@@ -96,4 +137,16 @@ d3Fetch.csv("data/Game_Logs_Runningback.csv", parseLine).then(data => {
 
   console.log(seasons);
   console.log(buildPlayerStatsBySeason(seasons, regularSeasonData));
+
+  let seasonExtent = d3Array.extent(seasons);
+
+  let seasonScale = d3Scale.scaleLinear()
+    .domain(seasonExtent)
+    .range([xPadding, width - xPadding]);
+
+  console.log(seasonExtent);
+
+  let fantasyPointsScale = d3Scale.scaleLinear()
+    .domain([0, maxFantasyPoints + 20])
+    .range([height - yPadding, yPadding]);
 })
