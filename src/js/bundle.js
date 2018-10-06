@@ -1334,10 +1334,12 @@ const buildPlayerStatsBySeason = (seasons, regularSeasonData) => {
   return seasons.map(season => {
     let gamesInSeason = regularSeasonData.filter(game => game.Year == season);
     let playersInSeason = selectUniquePlayerNames(gamesInSeason);
-    return playersInSeason.map(player => {
-      let statsForPlayer = gamesInSeason.filter(game => game.Name == player);
-      return accumulateStatsForGames(player, season, statsForPlayer);
-    });
+    return {
+      Season: season, StatsByPlayer: playersInSeason.map(player => {
+        let statsForPlayer = gamesInSeason.filter(game => game.Name == player);
+        return accumulateStatsForGames(player, season, statsForPlayer);
+      })
+    };
   });
 }
 
