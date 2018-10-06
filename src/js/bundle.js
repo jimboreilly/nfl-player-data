@@ -5801,6 +5801,18 @@ const plotAxis = (svg, xScale, yScale, xAxisLabel, yAxisLabel) => {
     .text(yAxisLabel);
 }
 
+const plotPlayersOverEachSeason = (svg, seasonDataByPlayer, seasonScale, fantasyPointsScale) => {
+  seasonDataByPlayer.map(seasonWithStats => {
+    seasonWithStats.StatsByPlayer.map(player =>
+      svg.append("circle")
+        .attr("cx", seasonScale(seasonWithStats.Season))
+        .attr("cy", fantasyPointsScale(player.FantasyPoints))
+        .attr("r", 2)
+        .style("fill", "#45b3e7")
+    )
+  });
+}
+
 d3Fetch.csv("data/Game_Logs_Runningback.csv", parseLine).then(data => {
   console.log(data);
 
@@ -5819,7 +5831,8 @@ d3Fetch.csv("data/Game_Logs_Runningback.csv", parseLine).then(data => {
   //console.log(buildSeasonStatsByPlayer(players, regularSeasonData));
 
   console.log(seasons);
-  console.log(buildPlayerStatsBySeason(seasons, regularSeasonData));
+  let seasonDataByPlayer = buildPlayerStatsBySeason(seasons, regularSeasonData);
+  console.log(seasonDataByPlayer);
 
   let seasonExtent = d3Array.extent(seasons);
 
@@ -5832,5 +5845,8 @@ d3Fetch.csv("data/Game_Logs_Runningback.csv", parseLine).then(data => {
   let fantasyPointsScale = d3Scale.scaleLinear()
     .domain([0, maxFantasyPoints + 20])
     .range([height - yPadding, yPadding]);
+
+  plotPlayersOverEachSeason(svg, seasonDataByPlayer, seasonScale, fantasyPointsScale);
+  plotAxis(svg, seasonScale, fantasyPointsScale, "Season", "Fantasy Points By Rushing");
 })
 },{"d3-array":1,"d3-axis":2,"d3-fetch":6,"d3-scale":9,"d3-selection":10}]},{},[13]);
