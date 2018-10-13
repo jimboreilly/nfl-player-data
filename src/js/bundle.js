@@ -6148,7 +6148,7 @@ const plotPlayersOverEachSeason = (svg, seasonDataByPlayer, seasonScale, fantasy
   let tip = d3Tip()
     .attr('class', 'd3-tip')
     //.html(function (d) { return d.Name + "<br>" + "Fantasy Points: " + d.FantasyPoints })
-    .html(d => { return d.Name + "<br>" + d.FantasyPoints })
+    .html(d => { return "<span style='color:orange'>" + d.Name + "</span>" + "<br>" + "<span style='color:DarkTurquoise'>Fantasy Points: </span>" + d.FantasyPoints })
     .direction('n')
     .offset([-3, 0])
 
