@@ -18,6 +18,7 @@ const yPadding = 80;
 
 const pointsPerYd = 0.1;
 const pointsPerTd = 6;
+const pointsPerRec = 1;
 const pointsPerFumble = -2;
 
 const parseLine = (line) => {
@@ -48,13 +49,18 @@ const selectUniqueSeasons = (gameData) => {
 }
 
 const reduceGameStats = (playerName, season, gameStats) => {
-  let seasonStats = { Name: playerName, Season: season, GamesPlayed: 0, Attempts: 0, RushingYards: 0, RushingTd: 0, Fumbles: 0 };
+  let seasonStats = { Name: playerName, Season: season, GamesPlayed: 0, Attempts: 0, RushingYards: 0, RushingTd: 0, Fumbles: 0, Receptions: 0, ReceivingTds: 0, ReceivingYards: 0 };
   gameStats.forEach((game) => {
     seasonStats.GamesPlayed++;
     seasonStats.Attempts += game.Attempts;
     seasonStats.RushingYards += game.RushingYards;
     seasonStats.RushingTd += game.RushingTd;
     if (!isNaN(game.Fumbles)) seasonStats.Fumbles += game.Fumbles;
+    if (!isNaN(game.Receptions)) {
+      seasonStats.Receptions += game.Receptions;
+      seasonStats.ReceivingYards += game.ReceivingYards;
+      seasonStats.ReceivingTds += game.ReceivingTds;
+    }
   });
 
   return seasonStats;
@@ -62,7 +68,10 @@ const reduceGameStats = (playerName, season, gameStats) => {
 const calculateFantasyPoints = stats => {
   let fp = (stats.RushingYards * pointsPerYd)
     + (stats.RushingTd * pointsPerTd)
-    + (stats.Fumbles * pointsPerFumble);
+    + (stats.Fumbles * pointsPerFumble)
+    + (stats.ReceivingYards * pointsPerYd)
+    + (stats.ReceivingTds * pointsPerTd)
+    + (stats.Receptions * pointsPerRec);
 
   if (fp > maxFantasyPoints) maxFantasyPoints = fp;
   return Math.round(fp * 10) / 10;
