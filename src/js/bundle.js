@@ -6070,9 +6070,9 @@ const selectUniqueSeasons = (gameData) => {
   return seasons
 }
 
-const accumulateStatsForGames = (playerName, season, games) => {
+const reduceGameStats = (playerName, season, gameStats) => {
   let seasonStats = { Name: playerName, Season: season, GamesPlayed: 0, Attempts: 0, RushingYards: 0, RushingTd: 0, Fumbles: 0 };
-  games.forEach((game) => {
+  gameStats.forEach((game) => {
     seasonStats.GamesPlayed++;
     seasonStats.Attempts += game.Attempts;
     seasonStats.RushingYards += game.RushingYards;
@@ -6080,11 +6080,21 @@ const accumulateStatsForGames = (playerName, season, games) => {
     if (!isNaN(game.Fumbles)) seasonStats.Fumbles += game.Fumbles;
   });
 
-  seasonStats.FantasyPoints = (seasonStats.RushingYards * pointsPerYd)
-    + (seasonStats.RushingTd * pointsPerTd)
-    + (seasonStats.Fumbles * pointsPerFumble);
+  return seasonStats;
+}
+const calculateFantasyPoints = stats => {
+  let fp = (stats.RushingYards * pointsPerYd)
+    + (stats.RushingTd * pointsPerTd)
+    + (stats.Fumbles * pointsPerFumble);
 
-  if (seasonStats.FantasyPoints > maxFantasyPoints) maxFantasyPoints = seasonStats.FantasyPoints;
+  if (fp > maxFantasyPoints) maxFantasyPoints = fp;
+  return Math.round(fp * 10) / 10;
+}
+
+const accumulateStatsForGames = (playerName, season, games) => {
+  let seasonStats = reduceGameStats(playerName, season, games);
+  seasonStats.FantasyPoints = calculateFantasyPoints(seasonStats);
+
   return seasonStats;
 }
 
