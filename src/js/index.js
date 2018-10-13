@@ -4,6 +4,7 @@ var d3Axis = require('d3-axis');
 var d3Scale = require('d3-scale');
 var d3Array = require('d3-array');
 var d3Format = require('d3-format');
+var d3Tip = require('d3-tip');
 
 var svg = d3Select.select("#stats");
 var maxFantasyPoints = 0;
@@ -93,13 +94,24 @@ const buildPlayerStatsBySeason = (seasons, regularSeasonData) => {
   });
 }
 
-const plotAxis = (svg, xScale, yScale, xAxisLabel, yAxisLabel) => {
+const plotAxis = (svg, xScale, yScale, totalSeasons, xAxisLabel, yAxisLabel) => {
   //x-axis, NFL Season
-  var bottomAxis = d3Axis.axisBottom(xScale).tickFormat(d3Format.format("d"));
+  var bottomAxis = d3Axis.axisBottom(xScale)
+    .ticks(totalSeasons)
+    .tickFormat(d3Format.format("d"));
+
   svg.append("g")
     .attr("transform", "translate(0," + (height - xPadding) + ")")
     .attr("class", "xaxis")
-    .call(bottomAxis);
+    .call(bottomAxis)
+    .selectAll("text")
+    .style("text-anchor", "end")
+    .attr("dx", "-.8em")
+    .attr("dy", ".15em")
+    .attr("transform", function (d) {
+      return "rotate(-65)"
+    });
+
 
   //y-axis, fantasy points per rush attempt
   var leftAxis = d3Axis.axisLeft(yScale);
@@ -107,28 +119,43 @@ const plotAxis = (svg, xScale, yScale, xAxisLabel, yAxisLabel) => {
     .attr("class", "yaxis")
     .attr("transform", "translate(" + yPadding + ", 0)")
     .call(leftAxis);
-
-  //x-axis label
-  svg.append("text")
-    .attr("transform", "translate(" + (width / 2.3) + "," + (height - (xPadding / 2)) + ")")
-    .text(xAxisLabel);
-
-  //y-axis label, rotated to be vertical text
-  svg.append("text")
-    .attr("transform", "translate(" + yPadding / 3 + "," + (height / 1.7) + ")rotate(270)")
-    .text(yAxisLabel);
 }
 
 const plotPlayersOverEachSeason = (svg, seasonDataByPlayer, seasonScale, fantasyPointsScale) => {
-  seasonDataByPlayer.map(seasonWithStats => {
-    seasonWithStats.StatsByPlayer.map(player =>
-      svg.append("circle")
-        .attr("cx", seasonScale(seasonWithStats.Season))
-        .attr("cy", fantasyPointsScale(player.FantasyPoints))
-        .attr("r", 2)
-        .style("fill", "#45b3e7")
-    )
-  });
+  let tip = d3Tip()
+    .attr('class', 'd3-tip')
+    //.html(function (d) { return d.Name + "<br>" + "Fantasy Points: " + d.FantasyPoints })
+    .html(d => { return d.Name + "<br>" + d.FantasyPoints })
+    .direction('n')
+    .offset([-3, 0])
+
+  svg.append('g').call(tip);
+
+  let data = seasonDataByPlayer.map(season => season.StatsByPlayer).flat();
+  // seasonDataByPlayer.map(seasonWithStats => {
+  //   seasonWithStats.StatsByPlayer.map(player =>
+  //     svg.append("circle")
+  //       .attr("cx", seasonScale(seasonWithStats.Season))
+  //       .attr("cy", fantasyPointsScale(player.FantasyPoints))
+  //       .attr("r", 2)
+  //       .style("fill", "#45b3e7")
+  //       .on('mouseover', tip.show)
+  //       .on('mouseout', tip.hide)
+  //   )
+  // });
+
+  console.log(data);
+
+  svg.selectAll('circle')
+    .data(data)
+    .enter()
+    .append('circle')
+    .attr('r', 2)
+    .attr("cx", d => { return seasonScale(d.Season) })
+    .attr("cy", d => { return fantasyPointsScale(d.FantasyPoints) })
+    .style("fill", "#45b3e7")
+    .on('mouseover', tip.show)
+    .on('mouseout', tip.hide);
 }
 
 d3Fetch.csv("data/Game_Logs_Runningback.csv", parseLine).then(data => {
@@ -161,9 +188,9 @@ d3Fetch.csv("data/Game_Logs_Runningback.csv", parseLine).then(data => {
   console.log(seasonExtent);
 
   let fantasyPointsScale = d3Scale.scaleLinear()
-    .domain([-10, maxFantasyPoints + 20])
+    .domain([-1, maxFantasyPoints + 20])
     .range([height - yPadding, yPadding]);
 
   plotPlayersOverEachSeason(svg, seasonDataByPlayer, seasonScale, fantasyPointsScale);
-  plotAxis(svg, seasonScale, fantasyPointsScale, "Season", "Fantasy Points By Rushing");
+  plotAxis(svg, seasonScale, fantasyPointsScale, seasons.length, "Season", "Fantasy Points By Rushing");
 })
