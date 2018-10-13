@@ -142,19 +142,6 @@ const plotPlayersOverEachSeason = (svg, seasonDataByPlayer, seasonScale, fantasy
   svg.append('g').call(tip);
 
   let data = seasonDataByPlayer.map(season => season.StatsByPlayer).flat();
-  // seasonDataByPlayer.map(seasonWithStats => {
-  //   seasonWithStats.StatsByPlayer.map(player =>
-  //     svg.append("circle")
-  //       .attr("cx", seasonScale(seasonWithStats.Season))
-  //       .attr("cy", fantasyPointsScale(player.FantasyPoints))
-  //       .attr("r", 2)
-  //       .style("fill", "#45b3e7")
-  //       .on('mouseover', tip.show)
-  //       .on('mouseout', tip.hide)
-  //   )
-  // });
-
-  console.log(data);
 
   svg.selectAll('circle')
     .data(data)
@@ -169,8 +156,6 @@ const plotPlayersOverEachSeason = (svg, seasonDataByPlayer, seasonScale, fantasy
 }
 
 d3Fetch.csv("data/Game_Logs_Runningback.csv", parseLine).then(data => {
-  console.log(data);
-
   //Selects only regular season games where a running back had a recorded attempt
   let regularSeasonData = data.filter(game =>
     game.Season == 'Regular Season'
@@ -178,24 +163,14 @@ d3Fetch.csv("data/Game_Logs_Runningback.csv", parseLine).then(data => {
   )
 
   //Selects each individual running back that recorded an attempt
-  let players = selectUniquePlayerNames(regularSeasonData);
   let seasons = selectUniqueSeasons(regularSeasonData);
-
-  console.log(regularSeasonData);
-  console.log(players);
-  //console.log(buildSeasonStatsByPlayer(players, regularSeasonData));
-
-  console.log(seasons);
   let seasonDataByPlayer = buildPlayerStatsBySeason(seasons, regularSeasonData);
-  console.log(seasonDataByPlayer);
 
   let seasonExtent = d3Array.extent(seasons);
 
   let seasonScale = d3Scale.scaleLinear()
     .domain(seasonExtent)
     .range([xPadding, width - xPadding]);
-
-  console.log(seasonExtent);
 
   let fantasyPointsScale = d3Scale.scaleLinear()
     .domain([-1, maxFantasyPoints + 20])
