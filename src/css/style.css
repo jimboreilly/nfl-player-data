@@ -5,6 +5,25 @@
   overflow: hidden;
 }
 
+.labelRow {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.Rb1line {
+  fill: none;
+  stroke: purple;
+  stroke-width: 2px;
+}
+
+.Rb2line {
+  fill: none;
+  stroke: palevioletred;
+  stroke-width: 2px;
+}
+
 .d3-tip {
   line-height: 1;
   font-weight: bold;

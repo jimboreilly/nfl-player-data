@@ -5,9 +5,11 @@ var d3Scale = require('d3-scale');
 var d3Array = require('d3-array');
 var d3Format = require('d3-format');
 var d3Tip = require('d3-tip');
+var d3Shape = require('d3-shape');
 
 var svg = d3Select.select("#stats");
 var maxFantasyPoints = 0;
+var maxFantasyPointsPerAttempt = 0;
 
 const width = svg.attr("width");
 const height = svg.attr("height");
@@ -80,7 +82,8 @@ const calculateFantasyPoints = stats => {
 const accumulateStatsForGames = (playerName, season, games) => {
   let seasonStats = reduceGameStats(playerName, season, games);
   seasonStats.FantasyPoints = calculateFantasyPoints(seasonStats);
-
+  seasonStats.FantasyPointsPerAttempt = seasonStats.FantasyPoints / seasonStats.Attempts;
+  if (seasonStats.FantasyPointsPerAttempt > maxFantasyPointsPerAttempt) maxFantasyPointsPerAttempt = seasonStats.FantasyPointsPerAttempt;
   return seasonStats;
 }
 
@@ -113,6 +116,18 @@ const buildPlayerStatsBySeason = (seasons, regularSeasonData) => {
   });
 }
 
+const buildRbTierAveragesBySeason = (playerStatsBySeason) => {
+  return playerStatsBySeason.map(seasonOfStats => {
+    seasonOfStats.StatsByPlayer.sort((a, b) => { return b.FantasyPoints - a.FantasyPoints })
+    return {
+      Season: seasonOfStats.Season,
+      RB1: seasonOfStats.StatsByPlayer.slice(0, 12).map(rb1 => { return rb1.FantasyPoints }).reduce((a, b) => { return a + b }) / 12,
+      RB2: seasonOfStats.StatsByPlayer.slice(12, 24).map(rb1 => { return rb1.FantasyPoints }).reduce((a, b) => { return a + b }) / 12,
+    }
+  })
+}
+//console.log(seasonOfStats.StatsByPlayer);
+
 const plotAxis = (svg, xScale, yScale, totalSeasons, xAxisLabel, yAxisLabel) => {
   //x-axis, NFL Season
   var bottomAxis = d3Axis.axisBottom(xScale)
@@ -143,14 +158,15 @@ const plotAxis = (svg, xScale, yScale, totalSeasons, xAxisLabel, yAxisLabel) => 
 const plotPlayersOverEachSeason = (svg, seasonDataByPlayer, seasonScale, fantasyPointsScale) => {
   let tip = d3Tip()
     .attr('class', 'd3-tip')
-    //.html(function (d) { return d.Name + "<br>" + "Fantasy Points: " + d.FantasyPoints })
     .html(d => { return "<span style='color:orange'>" + d.Name + "</span>" + "<br>" + "<span style='color:DarkTurquoise'>Fantasy Points: </span>" + d.FantasyPoints })
     .direction('n')
     .offset([-3, 0])
 
   svg.append('g').call(tip);
 
-  let data = seasonDataByPlayer.map(season => season.StatsByPlayer).flat();
+  let data = seasonDataByPlayer.map(season => season.StatsByPlayer)
+    .flat()
+    .filter(player => { return player.Attempts > 20 });
 
   svg.selectAll('circle')
     .data(data)
@@ -158,10 +174,33 @@ const plotPlayersOverEachSeason = (svg, seasonDataByPlayer, seasonScale, fantasy
     .append('circle')
     .attr('r', 2)
     .attr("cx", d => { return seasonScale(d.Season) })
+    // .attr("cy", d => { return fantasyPointsScale(d.FantasyPointsPerAttempt) })
     .attr("cy", d => { return fantasyPointsScale(d.FantasyPoints) })
     .style("fill", "#45b3e7")
     .on('mouseover', tip.show)
     .on('mouseout', tip.hide);
+}
+
+const plotRbTiersPerSeason = (svg, seasonRbTiers, seasonScale, fantasyPointsScale) => {
+  let Rb1Line = d3Shape.line()
+    .x(d => { return seasonScale(d.Season); })
+    .y(d => { return fantasyPointsScale(d.RB1); });
+
+  let Rb2Line = d3Shape.line()
+    .x(d => { return seasonScale(d.Season); })
+    .y(d => { return fantasyPointsScale(d.RB2); });
+
+  seasonRbTiers.sort((a, b) => { return a.Season - b.Season });
+  svg.append("path")
+    .data([seasonRbTiers])
+    .attr("class", "Rb1line")
+    .attr("d", Rb1Line);
+
+  svg.append("path")
+    .data([seasonRbTiers])
+    .attr("class", "Rb2line")
+    .attr("d", Rb2Line);
+
 }
 
 d3Fetch.csv("data/Game_Logs_Runningback.csv", parseLine).then(data => {
@@ -185,6 +224,14 @@ d3Fetch.csv("data/Game_Logs_Runningback.csv", parseLine).then(data => {
     .domain([-1, maxFantasyPoints + 20])
     .range([height - yPadding, yPadding]);
 
+  let fantasyPointsPerAttemptScale = d3Scale.scaleLinear()
+    .domain([0, maxFantasyPointsPerAttempt])
+    .range([height - yPadding, yPadding]);
+
+  let seasonRbTiers = buildRbTierAveragesBySeason(seasonDataByPlayer);
+
+  console.log(seasonRbTiers);
   plotPlayersOverEachSeason(svg, seasonDataByPlayer, seasonScale, fantasyPointsScale);
+  plotRbTiersPerSeason(svg, seasonRbTiers, seasonScale, fantasyPointsScale);
   plotAxis(svg, seasonScale, fantasyPointsScale, seasons.length, "Season", "Fantasy Points By Rushing");
 })
