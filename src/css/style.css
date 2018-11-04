@@ -1,5 +1,14 @@
+
+* {
+  font-family: "Ariel", Arial, Helvetica, sans-serif;
+}
+
+body {
+  background-color: whitesmoke;
+}
+
 .container {
-  width: 90%;
+  width: 80%;
   margin: auto;
   padding: 4px;
   overflow: auto;
