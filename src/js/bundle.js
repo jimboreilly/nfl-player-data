@@ -8114,7 +8114,8 @@ var svg = d3Select.select("#stats");
 var maxFantasyPoints = 0;
 var maxFantasyPointsPerAttempt = 0;
 
-const width = svg.attr("width");
+//const width = svg.attr("width");
+var width;
 const height = svg.attr("height");
 
 //paddings for minimized size of graph to fit labels/title
@@ -8307,6 +8308,9 @@ const plotRbTiersPerSeason = (svg, seasonRbTiers, seasonScale, fantasyPointsScal
 }
 
 d3Fetch.csv("data/Game_Logs_Runningback.csv", parseLine).then(data => {
+
+  width = document.getElementById("stats").clientWidth;
+  console.log(width);
   //Selects only regular season games where a running back had a recorded attempt
   let regularSeasonData = data.filter(game =>
     game.Season == 'Regular Season'
