@@ -2,7 +2,7 @@
 Manipulating and plotting NFL game data using D3.js
 
 
-Work in progress viewable at https://jamesmreilly.github.io/nfl-player-data/
+Work in progress viewable at https://jimboreilly.github.io/nfl-player-data/
 
 ### Data
 
